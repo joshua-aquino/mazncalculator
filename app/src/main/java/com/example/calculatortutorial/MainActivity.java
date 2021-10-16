@@ -14,6 +14,24 @@ public class MainActivity extends AppCompatActivity {
     private Button btn0, btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btnDV, btnMT, btnSB,
     btnAD, btnPR, btnEQ, btnAC, btnBS;
     private boolean periodInserted, operatorInserted;
+    private int operatorPosition;
+    private void backspace() {
+        curr = curr.substring(0, curr.length() - 1);
+    }
+    private void insertOperator(String o) {
+        if (!curr.isEmpty()) {
+            if (!operatorInserted) {
+                if (curr.substring(curr.length() - 1, curr.length()).equals(".")) {
+                    backspace();
+                }
+                curr = curr + o;
+                operatorInserted = true;
+                operatorPosition = curr.length() - 1;
+                periodInserted = false;
+                displayOne();
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
         res = "";
         periodInserted = false;
         operatorInserted = false;
+        operatorPosition = -1;
         btn0 = (Button) findViewById(R.id.btn0);
         btn1 = (Button) findViewById(R.id.btn1);
         btn2 = (Button) findViewById(R.id.btn2);
@@ -119,7 +138,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (periodInserted == false) {
-                    curr = (curr.isEmpty()) ? "0." : curr + ".";
+                    if (operatorPosition != -1) {
+                        if (operatorPosition == curr.length() - 1) {
+                            curr = curr + "0.";
+                        } else {
+                            curr = curr + ".";
+                        }
+                    } else if (curr.isEmpty()) {
+                        curr = curr + "0.";
+                    } else {
+                        curr = curr + ".";
+                    }
                     periodInserted = true;
                     displayOne();
                 }
@@ -130,6 +159,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 curr = "";
                 periodInserted = false;
+                operatorInserted = false;
+                operatorPosition = -1;
                 displayOne();
             }
         });
@@ -137,9 +168,74 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (!curr.isEmpty()) {
-                    curr = curr.substring(0, curr.length() - 1);
-                    periodInserted = (curr.contains(".") ? true : false);
-                    displayOne();
+                    if (curr.substring(curr.length() - 1, curr.length()).equals(".")) {
+                        backspace();
+                        periodInserted = false;
+                        displayOne();
+                    } else if (curr.substring(curr.length() - 1,
+                            curr.length()).matches(".*[/*-+].*")) {
+                        backspace();
+                        operatorInserted = false;
+                        operatorPosition = -1;
+                        periodInserted = (curr.contains(".") ? true : false);
+                        displayOne();
+                    } else {
+                        backspace();
+                        displayOne();
+                    }
+                }
+            }
+        });
+        btnDV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                insertOperator("/");
+            }
+        });
+        btnMT.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                insertOperator("*");
+            }
+        });
+        btnSB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                insertOperator("-");
+            }
+        });
+        btnAD.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                insertOperator("+");
+            }
+        });
+        btnEQ.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (operatorInserted && !(operatorPosition == curr.length() - 1)) {
+                    String [] tokens = {curr.substring(0, operatorPosition),
+                            curr.substring(operatorPosition, operatorPosition + 1),
+                            curr.substring(operatorPosition + 1, curr.length())};
+                    switch (tokens[1].charAt(0)) {
+                        case '/':
+                            res = Double.toString(Double.parseDouble(tokens[0]) /
+                                    Double.parseDouble(tokens[2]));
+                            break;
+                        case '*':
+                            res = Double.toString(Double.parseDouble(tokens[0]) *
+                                    Double.parseDouble(tokens[2]));
+                            break;
+                        case '-':
+                            res = Double.toString(Double.parseDouble(tokens[0]) -
+                                    Double.parseDouble(tokens[2]));
+                            break;
+                        case '+':
+                            res = Double.toString(Double.parseDouble(tokens[0]) +
+                                    Double.parseDouble(tokens[2]));
+                            break;
+                    }
+                    displayTwo();
                 }
             }
         });
